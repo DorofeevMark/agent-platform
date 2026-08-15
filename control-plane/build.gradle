@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+    id 'io.micronaut.application'
+}
+
+group = 'com.orbit'
+version = '0.1.0'
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+
+repositories { mavenCentral() }
+
+micronaut {
+    version = '4.10.9'
+    runtime = 'netty'
+    testRuntime = 'JUNIT_5'
+    processing {
+        incremental = true
+        annotations = ['com.orbit.controlplane.*']
+    }
+}
+
+dependencies {
+    annotationProcessor 'io.micronaut:micronaut-http-validation'
+    implementation 'io.micronaut:micronaut-http-server-netty'
+    implementation 'io.micronaut:micronaut-jackson-databind'
+    implementation 'io.micronaut.validation:micronaut-validation'
+    runtimeOnly 'ch.qos.logback:logback-classic'
+    testImplementation 'io.micronaut:micronaut-http-client'
+    testImplementation 'io.micronaut:micronaut-http-client-jdk'
+    testImplementation 'io.micronaut.test:micronaut-test-junit5'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+tasks.named('test') { useJUnitPlatform() }

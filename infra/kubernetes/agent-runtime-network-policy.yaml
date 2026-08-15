@@ -1,0 +1,14 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agent-runtime-default-deny-egress
+  namespace: agents-dev
+spec:
+  podSelector:
+    matchLabels:
+      orbit.io/component: agent-runtime
+  policyTypes:
+    - Egress
+  egress: []
+# The deployment compiler adds Cilium-specific allow rules only for model gateway,
+# Tool Gateway, Vault and telemetry. No general internet egress is permitted.
