@@ -13,13 +13,25 @@ A runnable vertical slice of the internal agent platform architecture. It intent
 
 ## Local start
 
-Prerequisites: Java 21, Gradle, and Python 3.12.
+Prerequisites: Java 21, Gradle, Node.js 20+, and Python 3.12.
 
 ```bash
 ./gradlew :control-plane:run
 ```
 
 The Micronaut API is available at `http://localhost:8080`.
+
+In a second terminal, start the builder UI:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The UI is available at `http://localhost:5173`. During development, its `/v1` requests
+are proxied to the local control plane. Set `VITE_CONTROL_PLANE_URL` when using a
+separately hosted API.
 
 ```bash
 curl -X POST http://localhost:8080/v1/agents \
@@ -40,6 +52,7 @@ uvicorn app.main:app --port 8081 --reload
 
 ```text
 control-plane/    Modular Micronaut control plane, organized by product domain
+frontend/         Vite + React builder UI (agent list and creation)
 agent-runtime/    Config-driven Python execution runtime
 tool-gateway/     Gateway contract and future independently deployable boundary
 contracts/        Versioned contracts shared across platform deployables
