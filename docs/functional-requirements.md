@@ -20,9 +20,9 @@ This document defines the functional behavior of the internal agent platform. Ar
 
 ## 3. Environments and promotion
 
-- Every agent must support DEV, STAGING, and PRODUCTION environments.
+- Every agent must support DEV and PRODUCTION environments.
 - Each environment must be independently configurable for credentials, databases, tools, resource limits, and network policies.
-- The platform must allow builders to test an agent in DEV and deploy it to STAGING before production.
+- The platform must allow builders to test an agent in DEV before production deployment.
 - Production promotion must support an approval gate.
 
 ## 4. Models, tools, and runtime

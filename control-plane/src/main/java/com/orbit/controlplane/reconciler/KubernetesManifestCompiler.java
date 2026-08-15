@@ -1,8 +1,8 @@
 package com.orbit.controlplane.reconciler;
 
-import com.orbit.controlplane.agents.domain.AgentModels.Agent;
-import com.orbit.controlplane.agents.domain.AgentModels.AgentVersion;
-import com.orbit.controlplane.agents.domain.AgentModels.Environment;
+import com.orbit.controlplane.agents.domain.Agent;
+import com.orbit.controlplane.agents.domain.AgentVersion;
+import com.orbit.controlplane.agents.domain.Environment;
 
 public final class KubernetesManifestCompiler {
     private KubernetesManifestCompiler() { }

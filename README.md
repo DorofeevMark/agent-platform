@@ -5,8 +5,8 @@ A runnable vertical slice of the internal agent platform architecture. It intent
 ## What works now
 
 - Creates agents and immutable agent versions.
-- Deploys a specific version to `DEV`, `STAGING`, or `PRODUCTION`.
-- Enforces a promotion path (`DEV → STAGING → PRODUCTION`).
+- Deploys a specific version to `DEV` or `PRODUCTION`.
+- Enforces a promotion path (`DEV → PRODUCTION`).
 - Enforces the rule that production deployments need an approval reference.
 - Produces a Kubernetes `Deployment`, `ServiceAccount`, `NetworkPolicy`, and `HPA` manifest as a dry-run compilation result.
 - Includes a small Python agent runtime that loads a compiled configuration and only calls the configured Tool Gateway.

@@ -1,0 +1,12 @@
+datasources:
+  default:
+    url: ${JDBC_URL:`jdbc:postgresql://localhost:5432/orbit`}
+    username: ${JDBC_USER:orbit}
+    password: ${JDBC_PASSWORD:local-development-only}
+    driverClassName: org.postgresql.Driver
+    dialect: POSTGRES
+
+flyway:
+  datasources:
+    default:
+      enabled: true
