@@ -1,0 +1,286 @@
+openapi: 3.1.0
+info:
+  title: Orbit Control Plane API
+  version: 1.0.0
+  description: |
+    Builder-facing API for declarative agents, immutable versions, and deployments.
+    This contract reflects the current control-plane wire representation. Deployment
+    reconciliation is asynchronous; responses currently expose the persisted version and
+    revision fields emitted by the control plane.
+servers:
+  - url: /v1
+tags:
+  - name: Agents
+  - name: Versions
+  - name: Deployments
+paths:
+  /agents:
+    get:
+      tags: [Agents]
+      operationId: listAgents
+      responses:
+        '200':
+          description: Agents visible to the caller.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Agent' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Agents]
+      operationId: createAgent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAgentRequest' }
+      responses:
+        '201':
+          description: Agent created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Agent' }
+        default: { $ref: '#/components/responses/Error' }
+  /agents/{agentId}/versions:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+    get:
+      tags: [Versions]
+      operationId: listAgentVersions
+      responses:
+        '200':
+          description: Immutable versions for this agent.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AgentVersion' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Versions]
+      operationId: createAgentVersion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAgentVersionRequest' }
+      responses:
+        '201':
+          description: Immutable version created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgentVersion' }
+        default: { $ref: '#/components/responses/Error' }
+  /agents/{agentId}/deployments:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+    get:
+      tags: [Deployments]
+      operationId: listDeployments
+      responses:
+        '200':
+          description: Deployments by environment.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Deployment' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Deployments]
+      operationId: createDeploymentRevision
+      description: |
+        Requests reconciliation of an immutable version into an environment. Production
+        requests require an approval reference. The returned revision is initially pending.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateDeploymentRequest' }
+      responses:
+        '202':
+          description: Reconciliation accepted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeploymentRevision' }
+        default: { $ref: '#/components/responses/Error' }
+  /agents/{agentId}/deployments/{deploymentId}/revisions:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+      - $ref: '#/components/parameters/DeploymentId'
+    get:
+      tags: [Deployments]
+      operationId: listDeploymentRevisions
+      responses:
+        '200':
+          description: Deployment revision history, newest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/DeploymentRevision' }
+        default: { $ref: '#/components/responses/Error' }
+  /agents/{agentId}/deployments/{deploymentId}/rollback:
+    parameters:
+      - $ref: '#/components/parameters/AgentId'
+      - $ref: '#/components/parameters/DeploymentId'
+    post:
+      tags: [Deployments]
+      operationId: rollbackDeployment
+      description: Selects an earlier immutable version and creates a new deployment revision.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RollbackDeploymentRequest' }
+      responses:
+        '202':
+          description: Rollback reconciliation accepted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DeploymentRevision' }
+        default: { $ref: '#/components/responses/Error' }
+components:
+  parameters:
+    AgentId:
+      name: agentId
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/Uuid' }
+    DeploymentId:
+      name: deploymentId
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/Uuid' }
+  responses:
+    Error:
+      description: Request could not be completed.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Uuid:
+      type: string
+      format: uuid
+    Timestamp:
+      type: string
+      format: date-time
+    Environment:
+      type: string
+      enum: [DEV, PRODUCTION]
+    ResourceProfile:
+      type: string
+      enum: [STANDARD, HEAVY, GPU_INFERENCE, BATCH_GPU]
+    DeploymentStatus:
+      type: string
+      enum: [PENDING, RUNNING, FAILED, ROLLED_BACK]
+    Agent:
+      type: object
+      additionalProperties: false
+      required: [id, name, owner, createdAt]
+      properties:
+        id: { $ref: '#/components/schemas/Uuid' }
+        name:
+          type: string
+          pattern: '^[a-z0-9-]{3,63}$'
+        owner:
+          type: string
+          description: Stable principal identifier of the owning builder or team.
+        createdAt: { $ref: '#/components/schemas/Timestamp' }
+    CreateAgentRequest:
+      type: object
+      additionalProperties: false
+      required: [name, owner]
+      properties:
+        name:
+          type: string
+          pattern: '^[a-z0-9-]{3,63}$'
+        owner: { type: string, minLength: 1 }
+    AgentVersion:
+      type: object
+      additionalProperties: false
+      required: [id, agentId, number, systemPrompt, model, tools, resourceProfile, configDigest, createdAt]
+      properties:
+        id: { $ref: '#/components/schemas/Uuid' }
+        agentId: { $ref: '#/components/schemas/Uuid' }
+        number: { type: integer, minimum: 1 }
+        systemPrompt: { type: string }
+        model: { type: string }
+        tools:
+          type: array
+          items: { type: string }
+        resourceProfile: { $ref: '#/components/schemas/ResourceProfile' }
+        configDigest:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+        createdAt: { $ref: '#/components/schemas/Timestamp' }
+    CreateAgentVersionRequest:
+      type: object
+      additionalProperties: false
+      required: [systemPrompt, model, tools]
+      properties:
+        systemPrompt: { type: string, minLength: 1, maxLength: 100000 }
+        model: { type: string, minLength: 1 }
+        tools:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { type: string, minLength: 1 }
+        resourceProfile: { $ref: '#/components/schemas/ResourceProfile' }
+    Deployment:
+      type: object
+      additionalProperties: false
+      required: [id, agentId, environment, activeRevisionId, createdAt]
+      properties:
+        id: { $ref: '#/components/schemas/Uuid' }
+        agentId: { $ref: '#/components/schemas/Uuid' }
+        environment: { $ref: '#/components/schemas/Environment' }
+        activeRevisionId: { type: [string, 'null'], format: uuid }
+        createdAt: { $ref: '#/components/schemas/Timestamp' }
+    CreateDeploymentRequest:
+      type: object
+      additionalProperties: false
+      required: [versionId, environment]
+      properties:
+        versionId: { $ref: '#/components/schemas/Uuid' }
+        environment: { $ref: '#/components/schemas/Environment' }
+        approvalReference:
+          type: string
+          minLength: 1
+          description: Required by policy for production promotion.
+    RollbackDeploymentRequest:
+      type: object
+      additionalProperties: false
+      required: [versionId]
+      properties:
+        versionId: { $ref: '#/components/schemas/Uuid' }
+        approvalReference:
+          type: string
+          minLength: 1
+          description: Required by policy when rolling back production.
+    DeploymentRevision:
+      type: object
+      additionalProperties: false
+      required: [id, deploymentId, versionId, number, status, manifest, createdAt]
+      properties:
+        id: { $ref: '#/components/schemas/Uuid' }
+        deploymentId: { $ref: '#/components/schemas/Uuid' }
+        versionId: { $ref: '#/components/schemas/Uuid' }
+        number: { type: integer, minimum: 1 }
+        status: { $ref: '#/components/schemas/DeploymentStatus' }
+        approvalReference: { type: [string, 'null'] }
+        manifest:
+          type: string
+          description: Kubernetes desired-state manifest produced for the revision.
+        createdAt: { $ref: '#/components/schemas/Timestamp' }
+    Problem:
+      type: object
+      additionalProperties: false
+      required: [type, title, status]
+      properties:
+        type: { type: string, format: uri-reference }
+        title: { type: string }
+        status: { type: integer, minimum: 400, maximum: 599 }
+        detail: { type: string }
+        instance: { type: string, format: uri-reference }

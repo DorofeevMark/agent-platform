@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orbit.internal/contracts/runtime/agent-runtime-config.v1.schema.json",
+  "title": "Orbit compiled agent runtime configuration v1",
+  "description": "Framework-neutral, deployment-specific configuration compiled by the control plane. It contains no secrets, Java domain objects, Kubernetes resources, or agent-framework payloads.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "configurationDigest",
+    "identity",
+    "agent",
+    "execution",
+    "model",
+    "tools",
+    "endpoints",
+    "observability"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "v1" },
+    "configurationDigest": {
+      "type": "string",
+      "description": "SHA-256 digest of the canonical serialized configuration with this field omitted.",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "identity": { "$ref": "#/$defs/Identity" },
+    "agent": { "$ref": "#/$defs/Agent" },
+    "execution": { "$ref": "#/$defs/Execution" },
+    "model": { "$ref": "#/$defs/Model" },
+    "tools": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/ToolGrant" }
+    },
+    "endpoints": { "$ref": "#/$defs/Endpoints" },
+    "observability": { "$ref": "#/$defs/Observability" }
+  },
+  "$defs": {
+    "Uuid": { "type": "string", "format": "uuid" },
+    "OpaqueReference": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Opaque platform reference. It is not a credential or secret value."
+    },
+    "Identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deploymentId", "deploymentRevisionId", "serviceIdentity"],
+      "properties": {
+        "deploymentId": { "$ref": "#/$defs/Uuid" },
+        "deploymentRevisionId": { "$ref": "#/$defs/Uuid" },
+        "serviceIdentity": { "$ref": "#/$defs/OpaqueReference" }
+      }
+    },
+    "Agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "versionId", "versionNumber", "environment", "resourceProfile"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Uuid" },
+        "versionId": { "$ref": "#/$defs/Uuid" },
+        "versionNumber": { "type": "integer", "minimum": 1 },
+        "environment": { "enum": ["DEV", "STAGING", "PRODUCTION"] },
+        "resourceProfile": { "enum": ["SMALL", "MEDIUM", "LARGE", "XL"] }
+      }
+    },
+    "Execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["systemPrompt", "requestTimeoutMs", "toolTimeoutMs", "maxRetries", "maxInputCharacters"],
+      "properties": {
+        "systemPrompt": { "type": "string", "minLength": 1, "maxLength": 100000 },
+        "requestTimeoutMs": { "type": "integer", "minimum": 1000, "maximum": 600000 },
+        "toolTimeoutMs": { "type": "integer", "minimum": 1000, "maximum": 600000 },
+        "maxRetries": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "maxInputCharacters": { "type": "integer", "minimum": 1, "maximum": 1000000 }
+      }
+    },
+    "Model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "provider", "credentialReference"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "provider": { "type": "string", "minLength": 1 },
+        "credentialReference": { "$ref": "#/$defs/OpaqueReference" }
+      }
+    },
+    "ToolGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "policyReference"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "policyReference": { "$ref": "#/$defs/OpaqueReference" }
+      }
+    },
+    "Endpoints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["toolGatewayUrl", "modelGatewayUrl"],
+      "properties": {
+        "toolGatewayUrl": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "modelGatewayUrl": { "type": "string", "format": "uri", "pattern": "^https://" }
+      }
+    },
+    "Observability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["serviceName", "telemetryEndpoint", "samplingRatio"],
+      "properties": {
+        "serviceName": { "type": "string", "minLength": 1 },
+        "telemetryEndpoint": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "samplingRatio": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}
