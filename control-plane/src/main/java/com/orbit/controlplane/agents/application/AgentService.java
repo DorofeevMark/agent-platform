@@ -47,7 +47,7 @@ public class AgentService {
         return agentRepository.save(new Agent(UUID.randomUUID(), request.name(), request.owner(), Instant.now()));
     }
 
-    public List<Agent> listAgents() { return agentRepository.findAllByOrderByCreatedAt(); }
+    public List<Agent> listAgents() { return agentRepository.findAllOrderByCreatedAt(); }
 
     @Transactional
     public AgentVersion createVersion(UUID agentId, CreateVersionRequest request) {
