@@ -1,5 +1,6 @@
 package com.orbit.controlplane.agents.domain;
 
+import com.orbit.controlplane.catalog.domain.ResourceProfile;
 import io.micronaut.data.annotation.Id;
 import io.micronaut.data.annotation.MappedEntity;
 import io.micronaut.data.annotation.MappedProperty;

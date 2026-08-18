@@ -3,6 +3,7 @@ package com.orbit.controlplane.reconciler;
 import com.orbit.controlplane.agents.domain.Agent;
 import com.orbit.controlplane.agents.domain.AgentVersion;
 import com.orbit.controlplane.agents.domain.Environment;
+import com.orbit.controlplane.catalog.domain.ResourceProfile;
 
 public final class KubernetesManifestCompiler {
     private KubernetesManifestCompiler() { }
@@ -10,10 +11,10 @@ public final class KubernetesManifestCompiler {
         String namespace = "agents-" + environment.name().toLowerCase();
         String app = agent.name() + "-v" + version.number();
         String resources = switch (version.resourceProfile()) {
-            case STANDARD -> "requests: {cpu: 500m, memory: 1Gi}\n          limits: {cpu: '2', memory: 4Gi}";
-            case HEAVY -> "requests: {cpu: '2', memory: 8Gi}\n          limits: {cpu: '8', memory: 32Gi}";
-            case GPU_INFERENCE -> "requests: {cpu: '4', memory: 16Gi, nvidia.com/gpu: '1'}\n          limits: {cpu: '8', memory: 32Gi, nvidia.com/gpu: '1'}";
-            case BATCH_GPU -> "requests: {cpu: '8', memory: 32Gi, nvidia.com/gpu: '1'}\n          limits: {cpu: '16', memory: 64Gi, nvidia.com/gpu: '1'}";
+            case SMALL -> "requests: {cpu: 500m, memory: 1Gi}\n          limits: {cpu: '2', memory: 4Gi}";
+            case MEDIUM -> "requests: {cpu: '2', memory: 8Gi}\n          limits: {cpu: '8', memory: 32Gi}";
+            case LARGE -> "requests: {cpu: '4', memory: 16Gi, nvidia.com/gpu: '1'}\n          limits: {cpu: '8', memory: 32Gi, nvidia.com/gpu: '1'}";
+            case XL -> "requests: {cpu: '8', memory: 32Gi, nvidia.com/gpu: '1'}\n          limits: {cpu: '16', memory: 64Gi, nvidia.com/gpu: '1'}";
         };
         return """
             apiVersion: v1

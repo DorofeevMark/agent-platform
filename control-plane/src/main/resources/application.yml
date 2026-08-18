@@ -10,3 +10,9 @@ flyway:
   datasources:
     default:
       enabled: true
+
+orbit:
+  catalog:
+    models: [gpt-5]
+    tools: [search]
+    resource-profiles: [SMALL, MEDIUM, LARGE, XL]

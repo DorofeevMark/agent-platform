@@ -10,7 +10,8 @@ import com.orbit.controlplane.agents.domain.Deployment;
 import com.orbit.controlplane.agents.domain.DeploymentRevision;
 import com.orbit.controlplane.agents.domain.DeploymentStatus;
 import com.orbit.controlplane.agents.domain.Environment;
-import com.orbit.controlplane.agents.domain.ResourceProfile;
+import com.orbit.controlplane.catalog.application.ApprovedCatalog;
+import com.orbit.controlplane.catalog.domain.ResourceProfile;
 import com.orbit.controlplane.agents.infrastructure.AgentRepository;
 import com.orbit.controlplane.agents.infrastructure.AgentVersionRepository;
 import com.orbit.controlplane.agents.infrastructure.DeploymentRepository;
@@ -33,13 +34,15 @@ public class AgentService {
     private final AgentVersionRepository agentVersionRepository;
     private final DeploymentRepository deploymentRepository;
     private final DeploymentRevisionRepository deploymentRevisionRepository;
+    private final ApprovedCatalog catalog;
 
     public AgentService(AgentRepository agentRepository, AgentVersionRepository agentVersionRepository,
-                        DeploymentRepository deploymentRepository, DeploymentRevisionRepository deploymentRevisionRepository) {
+                        DeploymentRepository deploymentRepository, DeploymentRevisionRepository deploymentRevisionRepository, ApprovedCatalog catalog) {
         this.agentRepository = agentRepository;
         this.agentVersionRepository = agentVersionRepository;
         this.deploymentRepository = deploymentRepository;
         this.deploymentRevisionRepository = deploymentRevisionRepository;
+        this.catalog = catalog;
     }
 
     @Transactional
@@ -52,8 +55,9 @@ public class AgentService {
     @Transactional
     public AgentVersion createVersion(UUID agentId, CreateVersionRequest request) {
         requireAgent(agentId);
+        validateCatalog(request);
         int number = agentVersionRepository.highestNumber(agentId) + 1;
-        ResourceProfile profile = request.resourceProfile() == null ? ResourceProfile.STANDARD : request.resourceProfile();
+        ResourceProfile profile = request.resourceProfile() == null ? ResourceProfile.SMALL : request.resourceProfile();
         String digest = sha256(agentId + "|" + number + "|" + request.systemPrompt() + "|" + request.model() + "|" + request.tools() + "|" + profile);
         AgentVersion version = new AgentVersion(UUID.randomUUID(), agentId, number, request.systemPrompt(), request.model(),
                 List.copyOf(request.tools()), profile, digest, Instant.now());
@@ -118,6 +122,12 @@ public class AgentService {
     }
 
     private Agent requireAgent(UUID id) { return agentRepository.findById(id).orElseThrow(() -> notFound("agent not found")); }
+    private void validateCatalog(CreateVersionRequest request) {
+        ResourceProfile profile = request.resourceProfile() == null ? ResourceProfile.SMALL : request.resourceProfile();
+        if (!catalog.hasModel(request.model())) throw badRequest("model is not approved: " + request.model());
+        request.tools().forEach(tool -> { if (!catalog.hasTool(tool)) throw badRequest("tool is not approved: " + tool); });
+        if (!catalog.hasResourceProfile(profile)) throw badRequest("resource profile is not approved: " + profile);
+    }
     private Deployment requireDeployment(UUID id, UUID agentId) {
         Deployment deployment = deploymentRepository.findById(id).orElseThrow(() -> notFound("deployment not found"));
         if (!deployment.agentId().equals(agentId)) throw notFound("deployment not found");
