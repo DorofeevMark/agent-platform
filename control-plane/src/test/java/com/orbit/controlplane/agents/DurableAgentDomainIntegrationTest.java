@@ -9,7 +9,7 @@ import com.orbit.controlplane.agents.domain.AgentVersion;
 import com.orbit.controlplane.agents.domain.Deployment;
 import com.orbit.controlplane.agents.domain.DeploymentRevision;
 import com.orbit.controlplane.agents.domain.Environment;
-import com.orbit.controlplane.agents.domain.ResourceProfile;
+import com.orbit.controlplane.catalog.domain.ResourceProfile;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.exceptions.HttpStatusException;
 import java.sql.SQLException;
@@ -93,7 +93,7 @@ class DurableAgentDomainIntegrationTest extends PostgresIntegrationTest {
     }
 
     private AgentVersion createVersion(Agent agent, String prompt) {
-        return agentService.createVersion(agent.id(), new CreateVersionRequest(prompt, "gpt-5", List.of("search"), ResourceProfile.STANDARD));
+        return agentService.createVersion(agent.id(), new CreateVersionRequest(prompt, "gpt-5", List.of("search"), ResourceProfile.MEDIUM));
     }
 
     private void updateVersionModel(java.util.UUID versionId) throws SQLException {

@@ -45,7 +45,9 @@ public abstract class PostgresIntegrationTest {
 
     @AfterAll
     void stopApplication() {
-        if (applicationContext != null) applicationContext.close();
+        if (applicationContext != null) {
+            applicationContext.close();
+        }
         postgres.stop();
     }
 

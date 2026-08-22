@@ -6,7 +6,9 @@ import com.orbit.controlplane.agents.domain.Environment;
 import com.orbit.controlplane.catalog.domain.ResourceProfile;
 
 public final class KubernetesManifestCompiler {
-    private KubernetesManifestCompiler() { }
+    private KubernetesManifestCompiler() {
+    }
+
     public static String compile(Agent agent, AgentVersion version, Environment environment) {
         String namespace = "agents-" + environment.name().toLowerCase();
         String app = agent.name() + "-v" + version.number();

@@ -12,5 +12,6 @@ import java.util.UUID;
 @JdbcRepository(dialect = Dialect.POSTGRES)
 public interface DeploymentRepository extends CrudRepository<Deployment, UUID> {
     List<Deployment> findByAgentIdOrderByCreatedAtDesc(UUID agentId);
+
     Optional<Deployment> findByAgentIdAndEnvironment(UUID agentId, Environment environment);
 }

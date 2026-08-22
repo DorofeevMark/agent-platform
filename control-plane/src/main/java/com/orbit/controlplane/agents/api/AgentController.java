@@ -62,6 +62,7 @@ public class AgentController {
     public List<DeploymentRevision> revisions(@PathVariable UUID agentId, @PathVariable UUID deploymentId) {
         return service.listRevisions(agentId, deploymentId);
     }
+
     @Post("/agents/{agentId}/deployments/{deploymentId}/rollback") @Status(HttpStatus.ACCEPTED)
     public DeploymentRevision rollback(@PathVariable UUID agentId, @PathVariable UUID deploymentId, @Body RollbackRequest request) {
         return service.rollback(agentId, deploymentId, request);

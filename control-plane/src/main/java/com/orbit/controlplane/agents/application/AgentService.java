@@ -50,7 +50,9 @@ public class AgentService {
         return agentRepository.save(new Agent(UUID.randomUUID(), request.name(), request.owner(), Instant.now()));
     }
 
-    public List<Agent> listAgents() { return agentRepository.findAllOrderByCreatedAt(); }
+    public List<Agent> listAgents() {
+        return agentRepository.findAllOrderByCreatedAt();
+    }
 
     @Transactional
     public AgentVersion createVersion(UUID agentId, CreateVersionRequest request) {
@@ -71,7 +73,9 @@ public class AgentService {
 
     @Transactional
     public DeploymentRevision deploy(UUID agentId, DeployRequest request) {
-        if (request.environment() == null) throw badRequest("environment is required");
+        if (request.environment() == null) {
+            throw badRequest("environment is required");
+        }
         requireApproval(request.environment(), request.approvalReference());
         AgentVersion version = requireVersion(request.versionId(), agentId);
         ensurePromotionPath(agentId, version.id(), request.environment());
@@ -109,7 +113,9 @@ public class AgentService {
     }
 
     private void ensurePromotionPath(UUID agentId, UUID versionId, Environment target) {
-        if (target == Environment.DEV) return;
+        if (target == Environment.DEV) {
+            return;
+        }
         if (!deploymentRevisionRepository.hasDeploymentInEnvironment(agentId, versionId, Environment.DEV.name())) {
             throw badRequest("version must be deployed to DEV before " + target);
         }
@@ -121,24 +127,54 @@ public class AgentService {
         }
     }
 
-    private Agent requireAgent(UUID id) { return agentRepository.findById(id).orElseThrow(() -> notFound("agent not found")); }
+    private Agent requireAgent(UUID id) {
+        return agentRepository.findById(id).orElseThrow(() -> notFound("agent not found"));
+    }
+
     private void validateCatalog(CreateVersionRequest request) {
         ResourceProfile profile = request.resourceProfile() == null ? ResourceProfile.SMALL : request.resourceProfile();
-        if (!catalog.hasModel(request.model())) throw badRequest("model is not approved: " + request.model());
-        request.tools().forEach(tool -> { if (!catalog.hasTool(tool)) throw badRequest("tool is not approved: " + tool); });
-        if (!catalog.hasResourceProfile(profile)) throw badRequest("resource profile is not approved: " + profile);
+        if (!catalog.hasModel(request.model())) {
+            throw badRequest("model is not approved: " + request.model());
+        }
+        request.tools().forEach(tool -> {
+            if (!catalog.hasTool(tool)) {
+                throw badRequest("tool is not approved: " + tool);
+            }
+        });
+        if (!catalog.hasResourceProfile(profile)) {
+            throw badRequest("resource profile is not approved: " + profile);
+        }
     }
+
     private Deployment requireDeployment(UUID id, UUID agentId) {
         Deployment deployment = deploymentRepository.findById(id).orElseThrow(() -> notFound("deployment not found"));
-        if (!deployment.agentId().equals(agentId)) throw notFound("deployment not found");
+        if (!deployment.agentId().equals(agentId)) {
+            throw notFound("deployment not found");
+        }
         return deployment;
     }
+
     private AgentVersion requireVersion(UUID versionId, UUID agentId) {
         AgentVersion version = agentVersionRepository.findById(versionId).orElseThrow(() -> notFound("agent version not found"));
-        if (!version.agentId().equals(agentId)) throw notFound("agent version not found");
+        if (!version.agentId().equals(agentId)) {
+            throw notFound("agent version not found");
+        }
         return version;
     }
-    private HttpStatusException badRequest(String message) { return new HttpStatusException(HttpStatus.BAD_REQUEST, message); }
-    private HttpStatusException notFound(String message) { return new HttpStatusException(HttpStatus.NOT_FOUND, message); }
-    private String sha256(String value) { try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8))); } catch (Exception e) { throw new IllegalStateException(e); } }
+
+    private HttpStatusException badRequest(String message) {
+        return new HttpStatusException(HttpStatus.BAD_REQUEST, message);
+    }
+
+    private HttpStatusException notFound(String message) {
+        return new HttpStatusException(HttpStatus.NOT_FOUND, message);
+    }
+
+    private String sha256(String value) {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
 }

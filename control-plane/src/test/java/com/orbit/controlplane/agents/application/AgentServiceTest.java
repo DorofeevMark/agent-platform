@@ -7,7 +7,8 @@ import com.orbit.controlplane.agents.domain.AgentVersion;
 import com.orbit.controlplane.agents.domain.Deployment;
 import com.orbit.controlplane.agents.domain.DeploymentRevision;
 import com.orbit.controlplane.agents.domain.Environment;
-import com.orbit.controlplane.agents.domain.ResourceProfile;
+import com.orbit.controlplane.catalog.domain.ResourceProfile;
+import com.orbit.controlplane.catalog.application.ApprovedCatalog;
 import com.orbit.controlplane.agents.infrastructure.AgentRepository;
 import com.orbit.controlplane.agents.infrastructure.AgentVersionRepository;
 import com.orbit.controlplane.agents.infrastructure.DeploymentRepository;
@@ -40,6 +41,7 @@ class AgentServiceTest {
     @Mock AgentVersionRepository agentVersionRepository;
     @Mock DeploymentRepository deploymentRepository;
     @Mock DeploymentRevisionRepository deploymentRevisionRepository;
+    @Mock ApprovedCatalog catalog;
     @InjectMocks AgentService agentService;
 
     @Test
@@ -93,17 +95,20 @@ class AgentServiceTest {
         when(agentRepository.findById(agentId)).thenReturn(Optional.of(new Agent(agentId, "support-triage", "maya@acme.test", Instant.now())));
         when(agentVersionRepository.highestNumber(agentId)).thenReturn(0);
         when(agentVersionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(catalog.hasModel("gpt-5")).thenReturn(true);
+        when(catalog.hasTool("search")).thenReturn(true);
+        when(catalog.hasResourceProfile(ResourceProfile.SMALL)).thenReturn(true);
 
         AgentVersion version = agentService.createVersion(agentId,
                 new CreateVersionRequest("Be helpful", "gpt-5", List.of("search"), null));
 
         assertEquals(1, version.number());
-        assertEquals(ResourceProfile.STANDARD, version.resourceProfile());
+        assertEquals(ResourceProfile.SMALL, version.resourceProfile());
         assertEquals(List.of("search"), version.tools());
     }
 
     private AgentVersion version(UUID agentId) {
         return new AgentVersion(UUID.randomUUID(), agentId, 1, "Be helpful", "gpt-5", List.of("search"),
-                ResourceProfile.STANDARD, "a".repeat(64), Instant.now());
+                ResourceProfile.MEDIUM, "a".repeat(64), Instant.now());
     }
 }

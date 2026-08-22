@@ -11,6 +11,7 @@ import java.util.UUID;
 @JdbcRepository(dialect = Dialect.POSTGRES)
 public interface AgentVersionRepository extends CrudRepository<AgentVersion, UUID> {
     List<AgentVersion> findByAgentIdOrderByNumber(UUID agentId);
+
     @Query("SELECT COALESCE(MAX(number), 0) FROM agent_versions WHERE agent_id = :agentId")
     int highestNumber(UUID agentId);
 }

@@ -47,17 +47,3 @@ CREATE INDEX agent_versions_agent_created_idx ON agent_versions (agent_id, numbe
 CREATE INDEX deployments_agent_created_idx ON deployments (agent_id, created_at DESC);
 CREATE INDEX deployment_revisions_deployment_created_idx ON deployment_revisions (deployment_id, number DESC);
 CREATE INDEX deployment_revisions_version_idx ON deployment_revisions (version_id);
-
-CREATE FUNCTION reject_immutable_history_mutation() RETURNS trigger AS $$
-BEGIN
-    RAISE EXCEPTION '% records are immutable', TG_TABLE_NAME;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER agent_versions_immutable
-    BEFORE UPDATE OR DELETE ON agent_versions
-    FOR EACH ROW EXECUTE FUNCTION reject_immutable_history_mutation();
-
-CREATE TRIGGER deployment_revisions_immutable
-    BEFORE UPDATE OR DELETE ON deployment_revisions
-    FOR EACH ROW EXECUTE FUNCTION reject_immutable_history_mutation();

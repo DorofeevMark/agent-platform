@@ -5,10 +5,16 @@ import java.util.List;
 
 public interface ApprovedCatalog {
     boolean hasModel(String model);
+
     boolean hasTool(String tool);
+
     boolean hasResourceProfile(ResourceProfile profile);
+
     List<String> models();
+
     List<String> tools();
+
     List<ResourceProfile> resourceProfiles();
+
     String workloadResources(ResourceProfile profile);
 }
