@@ -65,6 +65,9 @@ See [the proposed repository structure](docs/project-structure.md) for module ow
 dependency rules, and the relationship between the current vertical slice and the target
 architecture.
 
+See [the product roadmap](docs/product-roadmap.md) for the prioritized platform
+capabilities and delivery sequence.
+
 ## Deliberate next integrations
 
 The in-memory store is a local-development adapter. The next implementation increment replaces it with Postgres/Flyway, adds corporate OIDC and RBAC, changes the manifest dry-run to a Kubernetes reconciler, and binds runtime identities to Vault and the Tool Gateway.
